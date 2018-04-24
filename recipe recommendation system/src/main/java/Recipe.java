@@ -8,6 +8,7 @@ public class Recipe implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	private Integer id;
 	private String title;
 	private String desc;
 	private List<String> ingredients;
@@ -21,6 +22,7 @@ public class Recipe implements Serializable {
 	
 	public Recipe(String title, String desc, List<String> ingredients, List<String> directions, List<String> categories) {
 		super();
+		this.id = id;
 		this.title = title;
 		this.desc = desc;
 		this.ingredients = ingredients;
@@ -28,6 +30,14 @@ public class Recipe implements Serializable {
 		this.categories = categories;
 	}
 	
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
 	public String getTitle() {
 		return title;
 	}
@@ -70,6 +80,14 @@ public class Recipe implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "Recipe [title=" + title + "\n directions=" + directions + "\n ingredients=" + ingredients + "]";
+		
+		String url = "";
+		
+		//logic to generate url
+		
+		
+		System.out.println(this.title);
+		
+		return "";
 	}
 }
