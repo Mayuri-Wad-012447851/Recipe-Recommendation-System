@@ -22,7 +22,6 @@ public class Recipe implements Serializable {
 	
 	public Recipe(String title, String desc, List<String> ingredients, List<String> directions, List<String> categories) {
 		super();
-		this.id = id;
 		this.title = title;
 		this.desc = desc;
 		this.ingredients = ingredients;

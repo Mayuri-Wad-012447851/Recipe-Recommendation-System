@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
 
@@ -7,18 +9,23 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.ForeachFunction;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
 
 import scala.Tuple2;
 
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
 
 public class RecommendationEngine {
 	
+	public static final Map<Integer, Recipe> recipeMap = new HashMap<Integer, Recipe>();
+	
 	public static final String recipePath = "./src/main/resources/full_format_recipes.json/full_format_recipes.json";
 	
+	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
 		
 		//processing user input
@@ -58,46 +65,59 @@ public class RecommendationEngine {
 		/**
 		 * Load Recipe data
 		 */
-		JavaRDD<String> recipeRDD = spark.read().json(recipePath).toJSON().toJavaRDD();
-		System.out.println(recipeRDD.first());
+		Dataset<Row> recipe = spark.read().json(recipePath);
 		
-		JavaRDD<String> recipeFilteredRating = null;
-		//filtering recipes with rating equal or higher than user input 
-		if(!rating_input.isEmpty()) {
-			recipeFilteredRating = recipeRDD.filter(new Function<String, Boolean>() {
+		recipe.registerTempTable("recipe");
+		
+		recipe.printSchema();
+		
+		
+		Dataset<Row> recipesFiltered = null;
+		
+		if(!protein_input.isEmpty() || !rating_input.isEmpty()) {
+			if(protein_input.isEmpty()) {
+				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE rating >= "+rating+";");
+			} else if(rating_input.isEmpty()) {
+				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE protein >="+protein_content+";");
+			} else {
+				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE protein >="+protein_content+" AND rating >= "+rating);
+			}
+		} else {
+			recipesFiltered = spark.sql("SELECT * FROM recipe;");
+		}
+		
+		recipesFiltered.show();
+		recipesFiltered = recipesFiltered.distinct();
+		
+		recipesFiltered.foreach(new ForeachFunction<Row>() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+			Integer id = 1;
+			public void call(Row r) throws Exception {
+				String title = r.getString(10);
+				String desc = r.getString(3);
+				List<String> categories = r.getList(1);
+				List<String> ingredients = r.getList(6);
+				List<String> directions = r.getList(4);
 				
-				private static final long serialVersionUID = 1L;
-
-				public Boolean apply(String t) {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			});
-			recipeRDD = recipeFilteredRating;
-		}
-		
-		JavaRDD<String> recipeFilteredProteinContent = null;
-		if(!protein_input.isEmpty()) {
-			recipeFilteredProteinContent = recipeFilteredRating.filter(new Function<String, Boolean>() {
-				private static final long serialVersionUID = 1L;
-
-				public Boolean apply(String t) {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			});
-			recipeRDD = recipeFilteredProteinContent;
-		}
-		
+				Recipe rec = new Recipe(title, desc, ingredients, directions, categories);
+				recipeMap.put(id, rec);
+				id += 1;
+			}
+			
+		});
 		
 		RecommendationAgent agent = new RecommendationAgent();
-		List<Recipe> recommendedRecipes = agent.recommend(recipeRDD, ingredients);
+		List<Recipe> recommendedRecipes = agent.recommend(ingredients);
 		
 		
 		System.out.println("\n\nOur Agent recommends following recipes. Happy Cooking!! \n\n");
 		
-		for(Recipe recipe: recommendedRecipes) {
-			System.out.println(recipe); //it should print recipe title with link to webpage.
+		for(Recipe r: recommendedRecipes) {
+			System.out.println(r); //it should print recipe title with link to webpage.
 		}
 	}
 
