@@ -14,8 +14,17 @@ public class Recipe implements Serializable {
 	private List<String> ingredients;
 	private List<String> directions;
 	private List<String> categories;
+	private List<Integer> termFrequencyVector;
 	
 	
+	public List<Integer> getTermFrequencyVector() {
+		return termFrequencyVector;
+	}
+
+	public void setTermFrequencyVector(List<Integer> termFrequencyVector) {
+		this.termFrequencyVector = termFrequencyVector;
+	}
+
 	public Recipe() {
 		super();
 	}

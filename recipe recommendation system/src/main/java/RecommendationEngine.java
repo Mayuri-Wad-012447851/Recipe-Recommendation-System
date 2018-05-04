@@ -1,31 +1,21 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.function.Function;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.ForeachFunction;
-import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
 
-import scala.Tuple2;
-
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
 
 public class RecommendationEngine {
 	
+	//
 	public static final Map<Integer, Recipe> recipeMap = new HashMap<Integer, Recipe>();
 	
 	public static final String recipePath = "./src/main/resources/full_format_recipes.json/full_format_recipes.json";
 	
-	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
 		
 		//processing user input
@@ -67,10 +57,9 @@ public class RecommendationEngine {
 		 */
 		Dataset<Row> recipe = spark.read().json(recipePath);
 		
-		recipe.registerTempTable("recipe");
+		recipe.createOrReplaceTempView("recipe");
 		
 		recipe.printSchema();
-		
 		
 		Dataset<Row> recipesFiltered = null;
 		
@@ -110,8 +99,11 @@ public class RecommendationEngine {
 			
 		});
 		
+		recipesFiltered.createOrReplaceTempView("filteredRecipes");
+		Dataset<Row> categories = spark.sql("SELECT categories FROM filteredRecipes;");
+		
 		RecommendationAgent agent = new RecommendationAgent();
-		List<Recipe> recommendedRecipes = agent.recommend(ingredients);
+		List<Recipe> recommendedRecipes = agent.recommend(ingredients, categories);
 		
 		
 		System.out.println("\n\nOur Agent recommends following recipes. Happy Cooking!! \n\n");
