@@ -1,4 +1,3 @@
-package spring2018.lab3.solution;
 
 import java.awt.Desktop;
 import java.io.*;

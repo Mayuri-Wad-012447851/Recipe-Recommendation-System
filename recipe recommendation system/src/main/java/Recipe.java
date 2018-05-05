@@ -36,6 +36,7 @@ public class Recipe implements Serializable {
 		this.ingredients = ingredients;
 		this.directions = directions;
 		this.categories = categories;
+		this.termFrequencyVector = null;
 	}
 	
 	public Integer getId() {
