@@ -2,32 +2,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.feature.CountVectorizer;
 import org.apache.spark.ml.feature.CountVectorizerModel;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.ArrayType;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.Metadata;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
+
+import scala.Tuple2;
 
 public class RecommendationAgent {
 
 	public List<Recipe> recommend(String[] ingredients, Dataset<Row> categories, SparkSession spark) {
 		
-		List<Recipe> recommendations = new ArrayList<Recipe>();
+	List<Recipe> recommendations = new ArrayList<Recipe>();
 		
 	    List<Row> categoryLists = categories.collectAsList();
 		Dataset<Row> df = spark.createDataFrame(categoryLists, categories.schema());
@@ -61,17 +55,11 @@ public class RecommendationAgent {
 	    
 	    spark.stop();
 		
-		List<UUID> recipeIDs = knn(percept);
+		List<Tuple2<UUID, Double>> recipeIDs = knn(percept);
 		
 		return recommendations;
 	}
 
-	private List<UUID> knn(List<Integer> percept) {
-		// TODO Auto-generated method stub
-		
-		
-		return null;
-	}
 
 	private void calculateTermFrequencies(List<String> vocab) {
 		Collection<Recipe> rs = RecommendationEngine.recipeMap.values();
@@ -137,6 +125,29 @@ public class RecommendationAgent {
         }
         d = Math.sqrt(d);
         return d;
+	}
+
+	
+	private List<Tuple2<UUID, Double>> knn(List<Integer> percept){
+		
+		List<Tuple2<UUID, Double>> EucledeanDistances = new ArrayList<Tuple2<UUID, Double>>();
+		
+		for(Entry<UUID, Recipe> pair : RecommendationEngine.recipeMap.entrySet()) {
+			Tuple2<UUID, Double> pairDistances = new Tuple2<UUID, Double>(pair.getKey(), calculateEucledeanDistance(percept, pair.getValue().getTermFrequencyVector()));
+			EucledeanDistances.add(pairDistances);
+		}
+		 Comparator<Tuple2<UUID, Double>> comparator = new Comparator<Tuple2<UUID, Double>>()
+		    {
+
+				public int compare(Tuple2<UUID, Double> tuple1, Tuple2<UUID, Double> tuple2) {
+					return tuple1._2.compareTo(tuple2._2);
+				}
+
+		    };
+		Collections.sort(EucledeanDistances, comparator);
+
+		return EucledeanDistances.subList(0, 4);
+		
 	}
 
 }
