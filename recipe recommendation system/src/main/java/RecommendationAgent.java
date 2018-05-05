@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -28,8 +29,6 @@ public class RecommendationAgent {
 		
 		List<Recipe> recommendations = new ArrayList<Recipe>();
 		
-		//Row percept = generatePercept(ingredients);
-		
 	    List<Row> categoryLists = categories.collectAsList();
 		Dataset<Row> df = spark.createDataFrame(categoryLists, categories.schema());
 	    
@@ -41,32 +40,46 @@ public class RecommendationAgent {
 	    
 	    String[] vocab = cvModel.vocabulary();
 	    
-	    calculateTermFrequencies(vocab);
+	    List<String> vocabulary = new ArrayList<String>(Arrays.asList(vocab));
 	    
-	    for(String v : vocab) {
-	    	System.out.print(v+" ,");
+	    for(String word : ingredients) {
+	    	if(!vocabulary.contains(word)) {
+	    		vocabulary.add(word);
+	    	}
 	    }
+	    
+	    calculateTermFrequencies(vocabulary);
+	    
+	    List<Integer> percept = generatePercept(ingredients, vocabulary);
+	    
+
+	    System.out.print("\n[");
+		for(Integer k : percept) {
+			System.out.print(k+", ");
+		}
+		System.out.print("]\n");
+	    
 	    spark.stop();
 		
-		
-		//List<String> corpus = buildCorpus(ingredients);
-		
-		
-		
-		//List<Integer> percept = generatePercept(ingredients);
-		
-		//= knn(percept, corpus);
+		List<UUID> recipeIDs = knn(percept);
 		
 		return recommendations;
 	}
 
-	private void calculateTermFrequencies(String[] vocab) {
+	private List<UUID> knn(List<Integer> percept) {
+		// TODO Auto-generated method stub
+		
+		
+		return null;
+	}
+
+	private void calculateTermFrequencies(List<String> vocab) {
 		Collection<Recipe> rs = RecommendationEngine.recipeMap.values();
 		for(Recipe r: rs) {
 			System.out.println(r.getTitle());
-			List<Integer> tfVector = new ArrayList<Integer>(Collections.nCopies(vocab.length, 0));
-			for(int i = 0 ; i < vocab.length; i++) {
-				String term = vocab[i];
+			List<Integer> tfVector = new ArrayList<Integer>(Collections.nCopies(vocab.size(), 0));
+			for(int i = 0 ; i < vocab.size(); i++) {
+				String term = vocab.get(i);
 				if(r.getCategories().contains(term)) {
 					tfVector.add(i, 1);
 				}
@@ -80,8 +93,17 @@ public class RecommendationAgent {
 		}
 	}
 
-	private Row generatePercept(String[] ingredients) {
-		return RowFactory.create(Arrays.asList(ingredients));
+	private List<Integer> generatePercept(String[] ingredients, List<String> vocab) {
+		
+		List<String> ingred = Arrays.asList(ingredients);
+		List<Integer> perceptVector = new ArrayList<Integer>(Collections.nCopies(vocab.size(), 0));
+		for(int i = 0 ; i < vocab.size(); i++) {
+			String term = vocab.get(i);
+			if(ingred.contains(term)) {
+				perceptVector.add(i, 1);
+			}
+		}
+		return perceptVector;
 	}
 
 	private List<String> buildCorpus(String[] ingredients) {
@@ -111,9 +133,9 @@ public class RecommendationAgent {
         for(int i = 0; i < percept.size(); i++) {
         	Integer x = percept.get(i);
         	Integer y = record.get(i);
-        	d += ((x-y) ^ 2);
+        	d += Math.pow((x-y), 2);
         }
-        //d = math.sqrt(d);
+        d = Math.sqrt(d);
         return d;
 	}
 
