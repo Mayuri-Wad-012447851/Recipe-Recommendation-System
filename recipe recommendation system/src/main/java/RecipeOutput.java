@@ -1,4 +1,3 @@
-
 import java.awt.Desktop;
 import java.io.*;
 import java.sql.Timestamp;
@@ -17,6 +16,7 @@ public class RecipeOutput {
 	        File f = new File("output_"+name+".htm");
 	        BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 	        String title = item.getTitle();
+	        List<String> ingredients = item.getIngredients();
 	        List<String> directions = item.getDirections();
 	        //Following image file must be there in the path we open the HTML file
 	        String imgpath = "food1.jpg";
@@ -29,13 +29,19 @@ public class RecipeOutput {
 	        		"}\r\n" + 
 	        		".main {\r\n" + 
 	        		"  float: left;\r\n" + 
-	        		"  width: 60%;\r\n" + 
+	        		"  width: 50%;\r\n" + 
+	        		"  padding: 0 20px;\r\n" + 
+	        		"  overflow: hidden;\r\n" + 
+	        		"}\r\n" + 
+
+	        		".dirs {\r\n" + 
+	        		"  float: left;\r\n" + 
 	        		"  padding: 0 20px;\r\n" + 
 	        		"  overflow: hidden;\r\n" + 
 	        		"}\r\n" + 
 	        		".right {\r\n" + 
-	        		"  float: left;\r\n" + 
-	        		"  width: 40%;\r\n"  + 
+	        		"  float: right;\r\n" + 
+	        		"  width: 50%;\r\n"  + 
 	        		"}\r\n" + 
 	        		"\r\n" + 
 	        		"</style>\r\n" + 
@@ -52,12 +58,31 @@ public class RecipeOutput {
 	        
 	        bw.write("<img src=\""+imgpath+"\" style=\"width:100%\">");
 	        bw.write("</div>");
-	        bw.write("<div class=\"main\"");
+	        bw.write("<div class=\"main\">");
+	        
+	        bw.write("<h1>");
+	        bw.write("Ingredients");
+	        bw.write("</h1>");
+	        
+	        //Writes Ingredients 
+	        bw.write("<p>");
+	        for(String ingredient: ingredients) {
+            	bw.write(ingredient);
+                bw.write("<br>");
+            }
+	        bw.write("</p>");
+	        
+	      //Writes Directions 
+	        bw.write("<h1>");
+	        bw.write("Directions");
+	        bw.write("</h1>");
+	        
             for(String direction: directions) {
             	bw.write("<p>");
             	bw.write(direction);
             	bw.write("</p>");
             }
+            
             bw.write("</div>");
             bw.write("</div>");
 	        bw.write("</body>");
