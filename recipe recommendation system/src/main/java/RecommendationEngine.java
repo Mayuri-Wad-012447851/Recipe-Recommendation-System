@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,7 @@ public class RecommendationEngine {
 		        .getOrCreate();
 	}
 	
-	public static void run() {
+	public static void run() throws IOException {
 		
 		//processing user input
 		Scanner user_input = new Scanner(System.in);
@@ -35,29 +37,20 @@ public class RecommendationEngine {
 		String[] ingredients = user_input.nextLine().trim().split("[\\s,;]+");
 		
 		//Processing rating entered by user
-		Double rating = null;
-		System.out.println("Enter rating: (Optional)\t");
+		Double rating = 0.0;
+		System.out.println("Enter rating:\t");
 		String rating_input = user_input.nextLine();
 		if(!rating_input.isEmpty()) {
 			rating = Double.parseDouble(rating_input.trim());
 		}
 		
 		//Processing protein_content entered by user
-		Double protein_content = null;
-		System.out.println("Enter protein content: (Optional)\t");
+		Double protein_content = 0.0;
+		System.out.println("Enter protein content:\t");
 		String protein_input = user_input.nextLine();
 		if(!protein_input.isEmpty()) {
 			protein_content = Double.parseDouble(protein_input.trim());
 		}
-		
-		//Displaying user options ingredients entered by user
-		System.out.println("---------------------------------------------\nYou entered..");
-		System.out.println("Ingredients:\t");
-		for(int i = 0 ; i < ingredients.length; i++) {
-			System.out.print(ingredients[i]+"  ");
-		}
-		System.out.println("\nRating:\t"+rating);
-		System.out.println("Protein Content:\t"+protein_content);
 		
 		//Loading json recipe dataset
 		Dataset<Row> recipe = spark.read().json(recipePath);
@@ -65,29 +58,23 @@ public class RecommendationEngine {
 		//Creating temporary recipe table or view 
 		recipe.createOrReplaceTempView("recipe");
 		
-		//Printing recipe table schema
-		recipe.printSchema();
-		
 		//Filtering recipe dataset based on entered protein content and rating
 		Dataset<Row> recipesFiltered = null;
+		
 		if(!protein_input.isEmpty() || !rating_input.isEmpty()) {
 			if(protein_input.isEmpty()) {
-				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE rating >= "+rating+";");
+				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE rating >= "+rating);
 			} else if(rating_input.isEmpty()) {
-				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE protein >="+protein_content+";");
+				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE protein >="+protein_content);
 			} else {
 				recipesFiltered = spark.sql("SELECT * FROM recipe WHERE protein >="+protein_content+" AND rating >= "+rating);
 			}
 		} else {
-			recipesFiltered = spark.sql("SELECT * FROM recipe;");
+			recipesFiltered = recipe;
 		}
 		
 		//Removing duplicate entries from the dataset
 		recipesFiltered = recipesFiltered.distinct();
-		
-		//Displaying filtered recipes
-		//recipesFiltered.show();
-		
 		
 		//Creating Recipe objects for each row in the recipe dataset
 		// Storing recipe objects in HashMap
@@ -96,26 +83,26 @@ public class RecommendationEngine {
 			private static final long serialVersionUID = 1L;
 			
 			public void call(Row r) throws Exception {
-				String title = r.getString(10);
-				String desc = r.getString(3);
-				List<String> categories = r.getList(1);
-				List<String> ingredients = r.getList(6);
-				List<String> directions = r.getList(4);
+				String title = (r.get(10) == null ? "" : r.getString(10));
+				String desc = (r.get(3) == null ? "" : r.getString(3));
+				Double protein = (r.get(7) == null ? 0 : r.getDouble(7));
+				Double rating = (r.get(8) == null ? 0 : r.getDouble(8));
+				List<String> categories = (List<String>) (r.getList(1) == null ? new ArrayList<String>() : r.getList(1));
+				List<String> ingredients = (List<String>) (r.getList(6) == null ? new ArrayList<String>() : r.getList(6));
+				List<String> directions = (List<String>) (r.getList(4) == null ? new ArrayList<String>() : r.getList(4));
 				
-				Recipe rec = new Recipe(title, desc, ingredients, directions, categories);
+				Recipe rec = new Recipe(title, desc, ingredients, directions, categories, rating, protein);
 				recipeMap.put(UUID.randomUUID(), rec);
 			}
 		});
 		
 		recipesFiltered.createOrReplaceTempView("recipesFiltered");
 		
-		Dataset<Row> categories = recipesFiltered.select("categories");
-		categories.show();
-		
 		RecommendationAgent agent = new RecommendationAgent();
 		
-		List<Recipe> recommendedRecipes = agent.recommend(ingredients, categories, spark);
+		List<Recipe> recommendedRecipes = agent.recommend(ingredients);
 		
+		System.out.println("---------------------------------------------------------------------");
 		System.out.println("\n\nOur Agent recommends following recipes. Happy Cooking!! \n\n");
 		
 		if(!recommendedRecipes.isEmpty()) {
@@ -124,6 +111,7 @@ public class RecommendationEngine {
 			}
 		}
 		spark.stop();
+		user_input.close();
 	}
 
 }

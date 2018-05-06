@@ -15,6 +15,8 @@ public class Recipe implements Serializable {
 	private List<String> directions;
 	private List<String> categories;
 	private List<Integer> termFrequencyVector;
+	private Double rating;
+	private Double protein;
 	
 	
 	public List<Integer> getTermFrequencyVector() {
@@ -29,7 +31,7 @@ public class Recipe implements Serializable {
 		super();
 	}
 	
-	public Recipe(String title, String desc, List<String> ingredients, List<String> directions, List<String> categories) {
+	public Recipe(String title, String desc, List<String> ingredients, List<String> directions, List<String> categories, Double rating, Double protein) {
 		super();
 		this.title = title;
 		this.desc = desc;
@@ -37,6 +39,8 @@ public class Recipe implements Serializable {
 		this.directions = directions;
 		this.categories = categories;
 		this.termFrequencyVector = null;
+		this.protein = protein;
+		this.rating = rating;
 	}
 	
 	public Integer getId() {
@@ -87,16 +91,34 @@ public class Recipe implements Serializable {
 		this.categories = categories;
 	}
 	
+	public Double getRating() {
+		return rating;
+	}
+
+	public void setRating(Double rating) {
+		this.rating = rating;
+	}
+
+	public Double getProtein() {
+		return protein;
+	}
+
+	public void setProtein(Double protein) {
+		this.protein = protein;
+	}
+
 	@Override
 	public String toString() {
 		
-		String url = "";
-		
-		//logic to generate url
-		
-		
-		System.out.println(this.title);
-		
+		System.out.println("Title:\t"+this.title);
+		System.out.println("Rating:\t"+this.rating);
+		System.out.println("Protein Content:\t"+this.protein);
+		System.out.println("Ingredients:");
+		 System.out.print("\n[");
+			for(String k : this.categories) {
+				System.out.print(k+", ");
+			}
+			System.out.print("]\n");
 		return "";
 	}
 }

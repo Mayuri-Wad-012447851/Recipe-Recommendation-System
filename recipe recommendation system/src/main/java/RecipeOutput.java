@@ -53,6 +53,18 @@ public class RecipeOutput {
 	        bw.write("<img src=\""+imgpath+"\" style=\"width:100%\">");
 	        bw.write("</div>");
 	        bw.write("<div class=\"main\"");
+	        bw.write("Protein:");
+	        bw.write(item.getProtein().toString());
+	        bw.write("<br>");
+	        bw.write("Rating:");
+	        bw.write(item.getRating().toString());
+	        bw.write("<br>");
+	        bw.write("Ingredients:");
+	        for(String i: item.getIngredients()) {
+            	bw.write(i);
+            	bw.write(", ");
+            }
+	        bw.write("<br>");
             for(String direction: directions) {
             	bw.write("<p>");
             	bw.write(direction);
@@ -68,27 +80,4 @@ public class RecipeOutput {
 	        System.out.println(title);
 	        System.out.println(f.toURI());
 	}
-	
-    public static void main(String[] args) throws Exception {
-        RecipeOutput display = new RecipeOutput();
-        Recipe test_val = new Recipe("Lentil, Apple, and Turkey Wrap ", null, 
-        							Arrays.asList("4 cups low-sodium vegetable or chicken stock", "1 cup dried brown lentils", 
-        							 "1/2 cup dried French green lentils", "2 stalks celery, chopped", "1 large carrot, peeled and chopped",
-        							 "1 sprig fresh thyme", "1 teaspoon kosher salt", "1 medium tomato, cored, seeded, and diced", 
-        							 "1 small Fuji apple, cored and diced", "1 tablespoon freshly squeezed lemon juice",
-        							 "2 teaspoons extra-virgin olive oil", "Freshly ground black pepper to taste", 
-        							 "3 sheets whole-wheat lavash, cut in half crosswise, or 6 (12-inch) flour tortillas", 
-        							 "3/4 pound turkey breast, thinly sliced", "1/2 head Bibb lettuce"), Arrays.asList("1. Place the stock,"
-        							 	+ " lentils, celery, carrot, thyme, and salt in a medium saucepan and bring to a boil."
-        							 	+ " Reduce heat to low and simmer until the lentils are tender, about 30 minutes, depending on the lentils."
-        								+ " (If they begin to dry out, add water as needed.) Remove and discard the thyme. Drain and transfer the"
-        						 		+ " mixture to a bowl; let cool." , "2. Fold in the tomato, apple, lemon juice, and olive oil. Season with"
-        								+ " the pepper.", "3. To assemble a wrap, place 1 lavash sheet on a clean work surface. Spread some"
-        		 						+ " of the lentil mixture on the end nearest you, leaving a 1-inch border. Top with several "
-        		 						+ "slices of turkey, then some of the lettuce. Roll up the lavash, slice crosswise, and serve."
-        		 						+ " If using tortillas, spread the lentils in the center, top with the turkey and lettuce, and "
-        		 						+ "fold up the bottom, left side, and right side before rolling away from you."), Arrays.asList("Sandwich", 
-						 				"Bean", "Fruit", "Tomato", "turkey", "Vegetable", "Kid-Friendly", "Apple", "Lentil", "Lettuce", "Cookie"));
-        display.displayWebPage(test_val);
-    }
 }
