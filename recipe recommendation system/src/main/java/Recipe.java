@@ -3,9 +3,6 @@ import java.util.List;
 
 public class Recipe implements Serializable {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private Integer id;
@@ -114,11 +111,11 @@ public class Recipe implements Serializable {
 		System.out.println("Rating:\t"+this.rating);
 		System.out.println("Protein Content:\t"+this.protein);
 		System.out.println("Ingredients:");
-		 System.out.print("\n[");
+		 System.out.print("\t[");
 			for(String k : this.categories) {
 				System.out.print(k+", ");
 			}
-			System.out.print("]\n");
+			System.out.print("]");
 		return "";
 	}
 }

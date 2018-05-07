@@ -12,22 +12,31 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
+/**
+ * RecommendationEngine class represents engine of the recipe recommendation system
+ * @author Mayuri Wadkar, Unnathi Bhandary, Nivetha Vijayraju
+ *
+ */
 public class RecommendationEngine {
 	
-	public static Map<UUID, Recipe> recipeMap = new HashMap<UUID, Recipe>();
-	public static String recipePath = "./src/main/resources/full_format_recipes.json/full_format_recipes.json";
-	public static SparkSession spark = null;
+	public static Map<UUID, Recipe> recipeMap = new HashMap<UUID, Recipe>();	// A map to store recipe objects
+	public static String recipePath = "./src/main/resources/full_format_recipes.json/full_format_recipes.json";	//path to dataset
 	
-	public RecommendationEngine() {
+	/**
+	 * Run method accepts user input and displays recommendation results to the user.
+	 * It also filters recipes based on rating and protein content
+	 * It also wraps every row from recipe dataset into a recipe object
+	 * @return 
+	 * @throws IOException
+	 */
+	public static void main(String args[]) throws IOException {
+		
 		//Creating spark session
-		spark = SparkSession
+		SparkSession spark = SparkSession
 		        .builder()
 		        .appName("Recipe Recommendation System")
 		        .master("local[2]")
 		        .getOrCreate();
-	}
-	
-	public static void run() throws IOException {
 		
 		//processing user input
 		Scanner user_input = new Scanner(System.in);
@@ -77,7 +86,7 @@ public class RecommendationEngine {
 		recipesFiltered = recipesFiltered.distinct();
 		
 		//Creating Recipe objects for each row in the recipe dataset
-		// Storing recipe objects in HashMap
+		//Storing recipe objects in HashMap
 		recipesFiltered.foreach(new ForeachFunction<Row>() {
 			
 			private static final long serialVersionUID = 1L;
@@ -96,20 +105,30 @@ public class RecommendationEngine {
 			}
 		});
 		
+		//Creating temporary table or view for filtered recipes
 		recipesFiltered.createOrReplaceTempView("recipesFiltered");
 		
+		// Creating agent instance
 		RecommendationAgent agent = new RecommendationAgent();
 		
+		// Agent's recommend method takes ingredients entered by user and returns a list of 5 recipes
 		List<Recipe> recommendedRecipes = agent.recommend(ingredients);
 		
-		System.out.println("---------------------------------------------------------------------");
-		System.out.println("\n\nOur Agent recommends following recipes. Happy Cooking!! \n\n");
+		System.out.println("---------------------------------------------------------------------------");
+		System.out.println("Our Agent recommends following recipes. Happy Cooking!!");
+		System.out.println("---------------------------------------------------------------------------");
+		// To generate HTML webpage output
+		RecipeOutput webpageGenerater = new RecipeOutput();
 		
+		// Displaying results to the user on command line
 		if(!recommendedRecipes.isEmpty()) {
 			for(Recipe r: recommendedRecipes) {
-				System.out.println(r); //it should print recipe title with link to webpage.
+				System.out.println(r);
+				webpageGenerater.displayWebPage(r);
+				System.out.println("\n-----------------------------------------------------------------------------------");
 			}
 		}
+		
 		spark.stop();
 		user_input.close();
 	}

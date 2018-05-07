@@ -12,17 +12,17 @@ public class RecommendationAgent {
 
 	public List<Recipe> recommend(String[] ingredients) throws IOException {
 		
-		//Creating list for storing final recipes to recommend
+		//Creating a list to store final recipes to recommend
 		List<Recipe> recommendations = new ArrayList<Recipe>();
 	
-		//
+		//List to store tuples
+		//Each tuple is a pair containing recipe's UUID and count of ingredients common between a recipe and user input  
 		List<Tuple2<UUID, Integer>> counts = new ArrayList<Tuple2<UUID, Integer>>();
 		
+		//Computing counts for each recipe
 		for(Entry<UUID, Recipe> e: RecommendationEngine.recipeMap.entrySet()) {
-			
 			Integer count = 0;
 			List<String> cat = e.getValue().getCategories();
-			
 			if(cat != null && !cat.isEmpty()) {
 				for (String word : ingredients) {
 					if(cat.contains(word)) {
@@ -45,12 +45,11 @@ public class RecommendationAgent {
 				}
 			}
 	    };
+	    //Sorting counts list in descending order
 	    Collections.sort(counts, comparator);
 		
-	    RecipeOutput webpageGenerater = new RecipeOutput();
+	    //Returning 5 recipes with highest counts
 	    for(Tuple2<UUID, Integer> e : counts.subList(0, 5)) {
-			webpageGenerater.displayWebPage(RecommendationEngine.recipeMap.get(e._1()));
-			System.out.println(e._2());
 			recommendations.add(RecommendationEngine.recipeMap.get(e._1()));
 		}
 	    
